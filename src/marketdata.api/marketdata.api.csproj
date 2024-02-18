@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>3d7a044b-38ba-4362-bb8d-7ba589882cf2</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.19.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\marketdata.domain\marketdata.domain.csproj" />
+    <ProjectReference Include="..\marketdata.infraestructure\marketdata.infraestructure.csproj" />
+    <ProjectReference Include="..\marketdata.workerservice\marketdata.workerservice.csproj" />
+  </ItemGroup>
+
+</Project>
