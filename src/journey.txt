@@ -1,0 +1,28 @@
+
+docker run --name mysql -e MYSQL_ROOT_PASSWORD=11235 -p 3306:3306 -d mysql
+
+CREATE DATABASE IF NOT EXISTS marketdata;
+
+USE marketdata;
+
+
+CREATE TABLE IF NOT EXISTS Trades (
+    Symbol VARCHAR(255) NOT NULL,
+    Timestamp DATETIME NOT NULL,
+    TradeId INT NOT NULL AUTO_INCREMENT,
+    Price DECIMAL(19,4) NOT NULL,
+    Quantity DECIMAL(19,4) NOT NULL,
+    Tape CHAR(1) NOT NULL CHECK (Tape IN ('A', 'B', 'C')),
+    VolumeWeightedAveragePrice DECIMAL(19,4) NOT NULL,
+    PRIMARY KEY (TradeId)
+);
+
+
+INSERT INTO Trades (Symbol, Timestamp, Price, Quantity, Tape, VolumeWeightedAveragePrice)
+VALUES ('AAPL', '2024-02-19 14:30:00', 150.00, 100, 'C', 149.95);
+
+
+SELECT * FROM Trades
+
+
+"DefaultConnection": "Server=host.docker.internal;Port=3306;Database=marketdata;User ID=root;Password=11235;"

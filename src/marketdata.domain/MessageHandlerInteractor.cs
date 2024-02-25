@@ -15,14 +15,16 @@ public class MessageHandlerInteractor(ITradeGateway tradeGateway)
     public async Task Process(string message)
     {
         var news = JsonSerializer.Deserialize<List<Message>>(message);
+        if (news == null)
+            return;
 
         foreach (var n in news)
         {
-            if (n.T.ToLower() == "t")
+            if (n.T.Equals("t", StringComparison.CurrentCultureIgnoreCase))
             {
                 var trade = new Trade
                 {
-                    Symbol = message,
+                    Symbol = "xxx",
                     Tape = "C"
                 };
                 await _tradeGateway.Save(trade);

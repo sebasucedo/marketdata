@@ -8,7 +8,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace marketdata.workerservice;
+namespace marketdata.infraestructure.externalServices;
 
 public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, string secret) : IMarketSocket
 {
@@ -39,39 +39,25 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
             secret = _secret
         };
         var message = JsonSerializer.Serialize(auth, serializeOptions);
-        await SendMessage(message);
+        await _webSocket.SendMessage(message);
     }
 
     public async Task Subscribe(string[] symbols)
     {
-        var subscription = new 
-        { 
-            action = "subscribe", 
+        var subscription = new
+        {
+            action = "subscribe",
             trades = symbols,
             quotes = symbols,
             bars = symbols,
         };
         var message = JsonSerializer.Serialize(subscription, serializeOptions);
-        await SendMessage(message);
-    }
-
-    private async Task SendMessage(string message)
-    {
-        var buffer = new ArraySegment<byte>(
-            array: Encoding.ASCII.GetBytes(message),
-            offset: 0,
-            count: message.Length);
-
-        await _webSocket.SendAsync(
-            buffer: buffer,
-            messageType: WebSocketMessageType.Text,
-            endOfMessage: true,
-            cancellationToken: CancellationToken.None);
+        await _webSocket.SendMessage(message);
     }
 
     public async Task Listen(CancellationToken stoppingToken)
     {
-        
+
         while (!stoppingToken.IsCancellationRequested && _webSocket.State == WebSocketState.Open)
         {
             var buffer = new byte[1024 * 4]; // Buffer 

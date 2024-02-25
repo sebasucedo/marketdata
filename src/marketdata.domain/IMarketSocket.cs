@@ -8,7 +8,7 @@ namespace marketdata.domain;
 
 public interface IMarketSocket
 {
-    event EventHandler<string> MessageReceived;
+    event EventHandler<string>? MessageReceived;
     Task Connect(CancellationToken stoppingToken);
     Task Listen(CancellationToken stoppingToken);
     Task Subscribe(string[] symbols);
