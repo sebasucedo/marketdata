@@ -1,6 +1,7 @@
-﻿using marketdata.domain;
-using marketdata.infraestructure.externalServices;
-using marketdata.infraestructure.persistance;
+﻿using Amazon;
+using marketdata.domain;
+using marketdata.infrastructure.externalServices;
+using marketdata.infrastructure.persistance;
 using marketdata.workerservice;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,8 +9,10 @@ namespace marketdata.api;
 
 public static class Extensions
 {
-    public static void ConfigureServices(this IServiceCollection services, Config config)
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfigurationRoot configuration)
     {
+        var config = configuration.Get();
+
         var sharedCts = new CancellationTokenSource();
         services.AddSingleton(sharedCts);
         services.AddSingleton<IMarketSocket>(provider => new AlpacaSocket(
@@ -23,19 +26,21 @@ public static class Extensions
         services.AddTransient<MessageHandlerInteractor>();
 
         services.AddHostedService<Worker>();
+
+        return services;
     }
 
     public static void ConfigureRoutes(this WebApplication app)
     {
         app.MapGet("/", () => "Marketdata API!");
 
-        app.MapGet("/stop", (CancellationTokenSource sharedCts) =>
+        app.MapPost("/stop", (CancellationTokenSource sharedCts) =>
         {
             sharedCts.Cancel();
             return Results.Ok("Cancel signal sent.");
         });
 
-        app.MapPost("/subscribe", async ([FromServices] IMarketSocket socket,[FromBody] SubscrtiptionRequest request) =>
+        app.MapPost("/subscribe", async ([FromServices] IMarketSocket socket, [FromBody] SubscrtiptionRequest request) =>
         {
             await socket.Subscribe(request.Symbols);
             return Results.Ok();
