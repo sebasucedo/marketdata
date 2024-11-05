@@ -2,10 +2,14 @@
 using Amazon.Runtime;
 using Amazon.SecretsManager;
 using Amazon.SecretsManager.Model;
-using marketdata.domain;
+using Microsoft.Extensions.Configuration;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
-namespace marketdata.api;
+namespace marketdata.infrastructure;
 
 public class SecretsManagerHelper
 {

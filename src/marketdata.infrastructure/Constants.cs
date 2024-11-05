@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace marketdata.domain;
+namespace marketdata.infrastructure;
 
 public class Constants
 {

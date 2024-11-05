@@ -2,5 +2,5 @@
 
 public class SubscrtiptionRequest
 {
-    public string[] Symbols { get; set; }   
+    public string[] Symbols { get; set; } = [];
 }
