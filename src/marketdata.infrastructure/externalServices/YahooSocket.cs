@@ -1,4 +1,5 @@
 ﻿using marketdata.domain;
+using marketdata.infrastructure.alpaca;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,6 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using static Mysqlx.Expect.Open.Types.Condition.Types;
 
 namespace marketdata.infrastructure.externalServices;
 

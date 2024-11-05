@@ -1,4 +1,5 @@
 ﻿using marketdata.domain;
+using marketdata.infrastructure.alpaca;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;

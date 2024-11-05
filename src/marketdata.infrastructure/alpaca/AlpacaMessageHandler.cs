@@ -1,17 +1,15 @@
-﻿using marketdata.domain.entities;
+﻿using marketdata.domain;
+using marketdata.domain.entities;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace marketdata.domain;
+namespace marketdata.infrastructure.alpaca;
 
-public class MessageHandlerInteractor(ITradeGateway tradeGateway)
+public class AlpacaMessageHandler(ITradeGateway tradeGateway) : IMessageHandler
 {
     private readonly ITradeGateway _tradeGateway = tradeGateway;
 
@@ -38,17 +36,25 @@ public class MessageHandlerInteractor(ITradeGateway tradeGateway)
 
             switch (type)
             {
-                case "success":
+                case Constants.MessageTypes.SUCCESS:
                     var message = element.GetProperty("msg").GetString();
                     break;
-                case "t":
-                    await ExcecuteTrade(element);
+                case Constants.MessageTypes.ERROR:
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    };
+                    var text = element.GetRawText();
+                    var error = JsonSerializer.Deserialize<ErrorDTO>(text, options);
+                    break;
+                case Constants.MessageTypes.TRADE:
+                    await ExecuteTrade(element);
                     break;
             }
         }
     }
 
-    private async Task ExcecuteTrade(JsonElement element)
+    private async Task ExecuteTrade(JsonElement element)
     {
         //{ "T":"t","S":"AAPL","i":5674,"x":"V","p":171.64,"s":6,"c":["@","I"],"z":"C","t":"2024-03-28T18:13:56.149020008Z"}
         //{ "T":"t","S":"AAPL","i":6093,"x":"V","p":171.695,"s":100,"c":["@"],"z":"C","t":"2024-03-28T18:42:11.73120176Z"}
@@ -67,19 +73,4 @@ public class MessageHandlerInteractor(ITradeGateway tradeGateway)
         };
         await _tradeGateway.Save(trade);
     }
-}
-
-
-public class TradeDTO
-{
-    [JsonPropertyName("S")]
-    public required string Symbol { get; set; }
-    [JsonPropertyName("z")]
-    public required string Tape { get; set; }
-    [JsonPropertyName("t")]
-    public required string Timestamp { get; set; }
-    [JsonPropertyName("p")]
-    public decimal Price { get; set; }
-    [JsonPropertyName("s")]
-    public decimal Quantity { get; set; }
 }

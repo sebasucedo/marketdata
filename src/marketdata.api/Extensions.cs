@@ -1,7 +1,7 @@
-﻿using Amazon;
-using marketdata.domain;
-using marketdata.infrastructure.externalServices;
-using marketdata.infrastructure.persistance;
+﻿using marketdata.domain;
+using marketdata.domain.entities;
+using marketdata.infrastructure;
+using marketdata.infrastructure.alpaca;
 using marketdata.workerservice;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +11,8 @@ public static class Extensions
 {
     public static IServiceCollection AddServices(this IServiceCollection services, IConfigurationRoot configuration)
     {
+        services.AddSingleton<IClockWrapper, SystemClockWrapper>();
+
         var config = configuration.Get();
 
         var sharedCts = new CancellationTokenSource();
@@ -22,10 +24,14 @@ public static class Extensions
             config.Alpaca.Secret
             ));
 
-        services.AddTransient<ITradeGateway>(provider => new TradeDAO(config.ConnectionStrings.DefaultConnection));
-        services.AddTransient<MessageHandlerInteractor>();
+
+        services.AddTransient<ITradeGateway, TradeGateway>();
+
+        services.AddTransient<IMessageHandler, AlpacaMessageHandler>();
 
         services.AddHostedService<Worker>();
+
+        services.AddMassTransitAmazonSqs(config.Aws);
 
         return services;
     }
@@ -43,6 +49,23 @@ public static class Extensions
         app.MapPost("/subscribe", async ([FromServices] IMarketSocket socket, [FromBody] SubscrtiptionRequest request) =>
         {
             await socket.Subscribe(request.Symbols);
+            return Results.Ok();
+        });
+
+        app.MapPost("/test", async (ITradeGateway gateway) =>
+        {
+            Trade trade = new()
+            {
+                Symbol = "AAPL",
+                Timestamp = DateTime.UtcNow,
+                TradeId = 1,
+                Price = 2m,
+                Quantity = 3m,
+                Tape = "A",
+                VolumeWeightedAveragePrice = 4m,
+            };
+            await gateway.Save(trade);
+
             return Results.Ok();
         });
     }

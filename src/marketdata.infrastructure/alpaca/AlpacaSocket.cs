@@ -1,4 +1,5 @@
 ﻿using marketdata.domain;
+using marketdata.infrastructure.externalServices;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace marketdata.infrastructure.externalServices;
+namespace marketdata.infrastructure.alpaca;
 
 public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, string secret) : IMarketSocket
 {
@@ -19,7 +20,6 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
     private readonly ClientWebSocket _webSocket = new();
 
     public event EventHandler<string>? MessageReceived;
-
 
     static readonly JsonSerializerOptions serializeOptions = new()
     {
@@ -34,7 +34,7 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
 
         var auth = new
         {
-            action = "auth",
+            action = Constants.Actions.AUTH,
             key = _key,
             secret = _secret
         };
@@ -46,7 +46,7 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
     {
         var subscription = new
         {
-            action = "subscribe",
+            action = Constants.Actions.SUBSCRIBE,
             trades = symbols,
             quotes = symbols,
             bars = symbols,
@@ -67,7 +67,7 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
             if (result.MessageType == WebSocketMessageType.Text)
             {
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                _logger.LogInformation("Message received: " + message);
+                _logger.LogInformation("Message received: {message}", message);
 
                 OnMessageReceived(message);
             }
