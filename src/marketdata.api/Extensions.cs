@@ -2,7 +2,7 @@
 using marketdata.domain.entities;
 using marketdata.infrastructure;
 using marketdata.infrastructure.alpaca;
-using marketdata.workerservice;
+using marketdata.listener;
 using Microsoft.AspNetCore.Mvc;
 
 namespace marketdata.api;
