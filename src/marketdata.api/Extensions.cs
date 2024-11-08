@@ -2,7 +2,6 @@
 using marketdata.domain.entities;
 using marketdata.infrastructure;
 using marketdata.infrastructure.alpaca;
-using marketdata.listener;
 using Microsoft.AspNetCore.Mvc;
 
 namespace marketdata.api;
@@ -24,12 +23,10 @@ public static class Extensions
             config.Alpaca.Secret
             ));
 
-
         services.AddTransient<ITradeGateway, TradeGateway>();
-
         services.AddTransient<IMessageHandler, AlpacaMessageHandler>();
 
-        services.AddHostedService<Worker>();
+        services.AddHostedService<listener.Worker>();
 
         services.AddMassTransitAmazonSqs(config.Aws);
 
@@ -52,17 +49,19 @@ public static class Extensions
             return Results.Ok();
         });
 
-        app.MapPost("/test", async (ITradeGateway gateway) =>
+        app.MapPost("/test", async (ITradeGateway gateway, IClockWrapper clockWrapper) =>
         {
+            Random rnd = new();
+            decimal max = 100000m;
             Trade trade = new()
             {
                 Symbol = "AAPL",
-                Timestamp = DateTime.UtcNow,
-                TradeId = 1,
-                Price = 2m,
-                Quantity = 3m,
+                Timestamp = clockWrapper.UtcNow,
+                TradeId = rnd.Next(),
+                Price = Math.Round((decimal)(rnd.NextDouble() * (double)max), 2),
+                Quantity = Math.Round((decimal)(rnd.NextDouble() * (double)max), 2),
                 Tape = "A",
-                VolumeWeightedAveragePrice = 4m,
+                VolumeWeightedAveragePrice = rnd.Next(),
             };
             await gateway.Save(trade);
 

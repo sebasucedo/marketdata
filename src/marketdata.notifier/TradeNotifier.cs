@@ -6,9 +6,9 @@ using System.Text.Json;
 
 namespace marketdata.notifier;
 
-public class TradeNotifier(IHubContext<ChatHub> hubContext) : ITradeGateway
+public class TradeNotifier(IHubContext<TradeHub> hubContext) : ITradeGateway
 {
-    private readonly IHubContext<ChatHub> _hubContext = hubContext;
+    private readonly IHubContext<TradeHub> _hubContext = hubContext;
 
     public Task<IEnumerable<Trade>> GetAll()
     {
@@ -17,12 +17,11 @@ public class TradeNotifier(IHubContext<ChatHub> hubContext) : ITradeGateway
 
     public async Task<bool> Save(Trade trade)
     {
-        string user = "Notifier";
         var message = JsonSerializer.Serialize(trade);
 
         try
         {
-            await _hubContext.Clients.All.SendAsync("ReceiveMessage", user, message);
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", message);
 
             return true;
         }

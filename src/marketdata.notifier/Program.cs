@@ -28,7 +28,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapHub<ChatHub>("/chatHub");
+app.MapHub<TradeHub>("/tradetHub");
 
 app.Run();
 
