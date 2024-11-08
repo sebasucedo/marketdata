@@ -19,6 +19,7 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway) : IMessageHandler
 
     public async Task Process(string message)
     {
+        //System.Text.Json.JsonReaderException: 'Expected a value, but instead reached end of data. LineNumber: 0 | BytePositionInLine: 4096.'
         using JsonDocument doc = JsonDocument.Parse(message);
 
         if (doc.RootElement.ValueKind == JsonValueKind.Array)

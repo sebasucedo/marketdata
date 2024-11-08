@@ -1,23 +1,36 @@
-using Amazon.Runtime;
-using marketdata.api;
-using System.Text;
 using marketdata.infrastructure;
+using marketdata.notifier;
+using marketdata.notifier.hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
 IConfigurationRoot configuration = await GetConfiguration(builder);
 builder.Services.AddServices(configuration);
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddRazorPages();
+builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
-app.ConfigureRoutes();
-app.Run();
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+    app.UseHsts();
+}
 
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthorization();
+
+app.MapRazorPages();
+app.MapHub<TradeHub>("/tradetHub");
+
+app.Run();
 
 static async Task<IConfigurationRoot> GetConfiguration(WebApplicationBuilder builder)
 {
@@ -31,6 +44,6 @@ static async Task<IConfigurationRoot> GetConfiguration(WebApplicationBuilder bui
                         .Build() ?? throw new Exception("Configuration is null");
     else
         configuration = await SecretsManagerHelper.GetConfigurationFromPlainText();
-  
+
     return configuration;
 }

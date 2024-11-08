@@ -20,7 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\marketdata.domain\marketdata.domain.csproj" />
     <ProjectReference Include="..\marketdata.infrastructure\marketdata.infrastructure.csproj" />
-    <ProjectReference Include="..\marketdata.workerservice\marketdata.workerservice.csproj" />
+    <ProjectReference Include="..\marketdata.listener\marketdata.listener.csproj" />
   </ItemGroup>
 
 </Project>
