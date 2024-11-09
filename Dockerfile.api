@@ -4,7 +4,7 @@ WORKDIR /app
 COPY /src/marketdata.api/marketdata.api.csproj ./src/marketdata.api/
 COPY /src/marketdata.domain/marketdata.domain.csproj ./src/marketdata.domain/
 COPY /src/marketdata.infrastructure/marketdata.infrastructure.csproj ./src/marketdata.infrastructure/
-COPY /src/marketdata.workerservice/marketdata.workerservice.csproj ./src/marketdata.workerservice/
+COPY /src/marketdata.listener/marketdata.listener.csproj ./src/marketdata.listener/
 
 RUN dotnet restore ./src/marketdata.api/marketdata.api.csproj
 
