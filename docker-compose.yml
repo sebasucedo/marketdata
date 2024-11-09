@@ -1,12 +1,36 @@
 version: '3.8'
 
 services:
-  application:
+  api:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.api
     ports:
       - "5000:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: "http://*:8080"
+    depends_on:
+      - db
+  notifier:
+    build:
+      context: .
+      dockerfile: Dockerfile.notifier
+    ports:
+      - "5001:8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+  db:
+    image: "mariadb:latest"
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 11235
+      MYSQL_DATABASE: marketdata
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 11235
+    volumes:
+      - db-data:/var/lib/mysql
+
+volumes:
+  db-data:
