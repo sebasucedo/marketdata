@@ -9,9 +9,11 @@ using System.Threading.Tasks;
 
 namespace marketdata.infrastructure.alpaca;
 
-public class AlpacaMessageHandler(ITradeGateway tradeGateway) : IMessageHandler
+public class AlpacaMessageHandler(ITradeGateway tradeGateway,
+                                  IQuoteGateway quoteGateway) : IMessageHandler
 {
     private readonly ITradeGateway _tradeGateway = tradeGateway;
+    private readonly IQuoteGateway _quoteGateway = quoteGateway;
 
     //[{"T":"success","msg":"authenticated"}]
 
@@ -51,6 +53,9 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway) : IMessageHandler
                 case Constants.MessageTypes.TRADE:
                     await ExecuteTrade(element);
                     break;
+                case Constants.MessageTypes.QUOTE:
+                    await ExecuteQuote(element);
+                    break;
             }
         }
     }
@@ -73,5 +78,27 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway) : IMessageHandler
             Timestamp = DateTime.Parse(t.Timestamp),
         };
         await _tradeGateway.Save(trade);
+    }
+
+    private async Task ExecuteQuote(JsonElement element)
+    {
+        //{ "T":"b","S":"SPY","o":388.985,"h":389.13,"l":388.975,"c":389.12,"v":49378,"t":"2021-02-22T19:15:00Z" }
+        var text = element.GetRawText();
+        var q = JsonSerializer.Deserialize<QuoteDTO>(text);
+        if (q is null)
+            return;
+
+        var quote = new Quote
+        {
+            Symbol = q.Symbol,
+            Tape = q.Tape,
+            AskPrice = q.AskPrice,
+            AskSize = q.AskSize,
+            BidPrice = q.BidPrice,
+            BidSize = q.BidSize,
+            Timestamp = DateTime.Parse(q.Timestamp),
+        };
+
+        await _quoteGateway.Process(quote);
     }
 }

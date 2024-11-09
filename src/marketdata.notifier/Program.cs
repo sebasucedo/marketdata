@@ -12,7 +12,6 @@ builder.Services.AddSignalR();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -28,7 +27,7 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapHub<TradeHub>("/tradetHub");
+app.MapHub<TradeHub>("/tradet-hub");
 
 app.Run();
 
