@@ -1,7 +1,6 @@
 ﻿using Dapper;
 using marketdata.domain;
 using marketdata.domain.entities;
-using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -29,8 +28,16 @@ public class TradeDAO(IDbConnection connection) : ITradeGateway
         var sql = @"INSERT INTO Trades (Symbol, Timestamp, Price, Quantity, Tape, VolumeWeightedAveragePrice)
                     VALUES (@Symbol, @Timestamp, @Price, @Quantity, @Tape, @VolumeWeightedAveragePrice)";
 
-        var affectedRows = await _connection.ExecuteAsync(sql, trade);
+        try
+        {
+            var affectedRows = await _connection.ExecuteAsync(sql, trade);
 
-        return affectedRows == 1;
+            return affectedRows == 1;
+        }
+        catch (Exception ex)
+        {
+            Serilog.Log.Error(ex, "");
+            throw;
+        }
     }
 }

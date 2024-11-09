@@ -1,2 +1,10 @@
 https://docs.alpaca.markets/docs/real-time-stock-pricing-data
 https://alpaca.markets/docs/api-documentation/api-v2/market-data/alpaca-data-api-v2/historical/
+
+
+url: wss://stream.data.alpaca.markets/v2/iexl
+
+
+Test:
+url: wss://stream.data.alpaca.markets/v2/test
+Use the symbol "FAKEPACA" when trying out this test stream.

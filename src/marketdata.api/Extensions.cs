@@ -24,6 +24,7 @@ public static class Extensions
             ));
 
         services.AddTransient<ITradeGateway, TradeGateway>();
+        services.AddTransient<IQuoteGateway, QuoteGateway>();
         services.AddTransient<IMessageHandler, AlpacaMessageHandler>();
 
         services.AddHostedService<listener.Worker>();

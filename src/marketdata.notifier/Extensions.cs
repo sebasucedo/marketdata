@@ -1,7 +1,6 @@
 ﻿using System.Data;
 using marketdata.domain;
 using marketdata.infrastructure;
-using marketdata.notifier.hubs;
 
 namespace marketdata.notifier;
 
@@ -12,6 +11,7 @@ internal static class Extensions
         var config = configuration.Get();
 
         services.AddTransient<ITradeGateway, TradeNotifier>();
+        services.AddTransient<IQuoteGateway, QuoteNotifier>();
 
         services.AddMassTransitAmazonSqsConsumers(config.Aws);
 

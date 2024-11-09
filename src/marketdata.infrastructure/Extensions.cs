@@ -37,6 +37,7 @@ public static class Extensions
         services.AddMassTransit(x =>
         {
             x.AddConsumer<TradeEventConsumer>();
+            x.AddConsumer<QuoteEventConsumer>();
 
             x.UsingAmazonSqs((context, cfg) =>
             {
