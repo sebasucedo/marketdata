@@ -1,12 +1,11 @@
-using Amazon.Runtime;
 using marketdata.api;
-using System.Text;
 using marketdata.infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 IConfigurationRoot configuration = await GetConfiguration(builder);
 builder.Services.AddServices(configuration);
+builder.Services.AddOpenTelemetry(configuration);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -17,7 +16,6 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.ConfigureRoutes();
 app.Run();
-
 
 static async Task<IConfigurationRoot> GetConfiguration(WebApplicationBuilder builder)
 {
@@ -31,6 +29,6 @@ static async Task<IConfigurationRoot> GetConfiguration(WebApplicationBuilder bui
                         .Build() ?? throw new Exception("Configuration is null");
     else
         configuration = await SecretsManagerHelper.GetConfigurationFromPlainText();
-  
+
     return configuration;
 }

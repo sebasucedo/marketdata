@@ -1,6 +1,6 @@
-﻿using System.Data;
-using marketdata.domain;
+﻿using marketdata.domain;
 using marketdata.infrastructure;
+using marketdata.notifier.config;
 
 namespace marketdata.notifier;
 
@@ -14,6 +14,8 @@ internal static class Extensions
         services.AddTransient<IQuoteGateway, QuoteNotifier>();
 
         services.AddMassTransitAmazonSqsConsumers(config.Aws);
+
+        services.Configure<CognitoConfig>(configuration.GetSection("Aws:Cognito"));
 
         return services;
     }

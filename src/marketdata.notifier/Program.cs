@@ -1,6 +1,9 @@
+using Amazon;
+using Amazon.CognitoIdentityProvider;
 using marketdata.infrastructure;
 using marketdata.notifier;
 using marketdata.notifier.hubs;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +12,33 @@ builder.Services.AddServices(configuration);
 
 builder.Services.AddRazorPages();
 builder.Services.AddSignalR();
+
+
+
+
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+    });
+builder.Services.AddAuthorization();
+
+builder.Services.AddSingleton(provider =>
+    new AmazonCognitoIdentityProviderClient(RegionEndpoint.GetBySystemName("us-east-1")));
+
+
+builder.Services.AddRazorPages(options =>
+{
+    options.Conventions.AuthorizeFolder("/");
+});
+
 
 var app = builder.Build();
 
@@ -24,10 +54,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapRazorPages();
-app.MapHub<TradeHub>("/tradet-hub");
+app.MapHub<TradeHub>("/trade-hub");
 
 app.Run();
 

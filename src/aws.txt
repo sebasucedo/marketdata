@@ -1,0 +1,2 @@
+
+https://masstransit.io/documentation/transports/amazon-sqs
