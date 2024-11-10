@@ -6,6 +6,7 @@ internal class Config(IConfiguration config) : infrastructure.configs.Config(con
     public Alpaca Alpaca { get; set; } = config.GetSection(nameof(Alpaca)).Get<Alpaca>()!;
     public Polygon Polygon { get; set; } = config.GetSection(nameof(Polygon)).Get<Polygon>()!;
     public Yahoo Yahoo { get; set; } = config.GetSection(nameof(Yahoo)).Get<Yahoo>()!;
+    public Jaeger Jaeger { get; set; } = config.GetSection(nameof(Jaeger)).Get<Jaeger>()!;
 }
 
 internal class Alpaca
@@ -25,6 +26,13 @@ internal class Yahoo
 {
     public required string Url { get; set; }
 
+}
+
+internal class Jaeger
+{
+    public required string Endpoint { get; set; }
+    public required string ServiceName { get; set; }
+    public required string ServiceVersion { get; set; }
 }
 
 internal static class ConfigExtensions

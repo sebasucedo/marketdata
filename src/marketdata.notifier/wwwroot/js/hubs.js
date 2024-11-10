@@ -1,6 +1,10 @@
 "use strict";
 
-var connection = new signalR.HubConnectionBuilder().withUrl("/tradet-hub").build();
+var connection = new signalR.HubConnectionBuilder()
+    .withUrl("/trade-hub", {
+        withCredentials: true
+    })
+    .build();
 
 connection.on("ReceiveMessage", function (message) {
     var li = document.createElement("li");

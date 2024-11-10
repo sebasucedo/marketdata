@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{E22B0D8E-4D6D-467A-812A-C5211790387B}"
 	ProjectSection(SolutionItems) = preProject
 		alpaca.txt = alpaca.txt
+		aws.txt = aws.txt
 		journey.txt = journey.txt
 	EndProjectSection
 EndProject

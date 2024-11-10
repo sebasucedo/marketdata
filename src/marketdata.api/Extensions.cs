@@ -2,7 +2,11 @@
 using marketdata.domain.entities;
 using marketdata.infrastructure;
 using marketdata.infrastructure.alpaca;
+using MassTransit.Monitoring;
 using Microsoft.AspNetCore.Mvc;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 
 namespace marketdata.api;
 
@@ -30,6 +34,33 @@ public static class Extensions
         services.AddHostedService<listener.Worker>();
 
         services.AddMassTransitAmazonSqs(config.Aws);
+
+        return services;
+    }
+
+    public static IServiceCollection AddOpenTelemetry(this IServiceCollection services, IConfigurationRoot configuration)
+    {
+        var config = configuration.Get();
+
+        void ConfigureResource(ResourceBuilder r)
+        {
+            r.AddService(config.Jaeger.ServiceName,
+                serviceVersion: config.Jaeger.ServiceVersion,
+                serviceInstanceId: Environment.MachineName);
+        }
+
+        services.AddOpenTelemetry()
+            .ConfigureResource(ConfigureResource)
+            .WithMetrics(b =>
+                b.AddMeter(InstrumentationOptions.MeterName)
+                 .AddOtlpExporter(opts => { opts.Endpoint = new Uri(config.Jaeger.Endpoint); })
+            )
+            .WithTracing(b =>
+            {
+                b.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(config.Jaeger.ServiceName))
+                 .AddAspNetCoreInstrumentation()
+                 .AddOtlpExporter(opts => { opts.Endpoint = new Uri(config.Jaeger.Endpoint); });
+            });
 
         return services;
     }
