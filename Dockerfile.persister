@@ -1,0 +1,30 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+COPY /src/marketdata.persister/marketdata.persister.csproj ./src/marketdata.persister/
+COPY /src/marketdata.infrastructure/marketdata.infrastructure.csproj ./src/marketdata.infrastructure/
+
+RUN dotnet restore ./src/marketdata.persister/marketdata.persister.csproj
+
+COPY /src/ ./src
+WORKDIR /app/src/marketdata.persister
+RUN dotnet build marketdata.persister.csproj -c Release -o /app/build
+
+RUN dotnet publish marketdata.persister.csproj -c Release -o /app/publish
+
+RUN apt-get update && apt-get install -y default-mysql-client
+
+COPY migrations/ /app/migrations/
+COPY marketdata-persister-entrypoint.sh /app/marketdata-persister-entrypoint.sh
+
+RUN chmod +x /app/marketdata-persister-entrypoint.sh
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+COPY --from=build /app/migrations /app/migrations
+COPY --from=build /app/marketdata-persister-entrypoint.sh .
+
+RUN apt-get update && apt-get install -y default-mysql-client
+
+ENTRYPOINT [ "./marketdata-persister-entrypoint.sh" ]
