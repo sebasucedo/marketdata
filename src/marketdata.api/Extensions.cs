@@ -1,12 +1,18 @@
-﻿using marketdata.domain;
+﻿using Amazon.CloudWatchLogs;
+using marketdata.domain;
 using marketdata.domain.entities;
 using marketdata.infrastructure;
 using marketdata.infrastructure.alpaca;
+using marketdata.infrastructure.configs;
 using MassTransit.Monitoring;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
+using Serilog.Sinks.AwsCloudWatch;
+using Serilog;
+using Amazon;
 
 namespace marketdata.api;
 
@@ -61,6 +67,35 @@ public static class Extensions
                  .AddAspNetCoreInstrumentation()
                  .AddOtlpExporter(opts => { opts.Endpoint = new Uri(config.Jaeger.Endpoint); });
             });
+
+        return services;
+    }
+
+    public static IServiceCollection AddLogger(this IServiceCollection services, IConfiguration configuration)
+    {
+        using var serviceProvider = services.BuildServiceProvider();
+        var awsConfig = serviceProvider.GetRequiredService<IOptions<AwsConfig>>().Value;
+
+        if (awsConfig.CloudWatch is not null)
+        {
+            var logClient = new AmazonCloudWatchLogsClient(awsConfig.AccessKey, awsConfig.SecretKey, RegionEndpoint.GetBySystemName(awsConfig.Region));
+
+            Log.Logger = new LoggerConfiguration()
+                             .ReadFrom.Configuration(configuration)
+                             .Enrich.FromLogContext()
+                             .WriteTo.AmazonCloudWatch(
+                                 logGroup: awsConfig.CloudWatch.LogGroupName,
+                                 logStreamPrefix: DateTime.UtcNow.ToString("yyyyMMddHHmmssfff"),
+                                 batchSizeLimit: 100,
+                                 queueSizeLimit: 10000,
+                                 batchUploadPeriodInSeconds: 15,
+                                 createLogGroup: true,
+                                 maxRetryAttempts: 3,
+                                 logGroupRetentionPolicy: LogGroupRetentionPolicy.OneMonth,
+                                 cloudWatchClient: logClient,
+                                 restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Warning)
+                             .CreateLogger();
+        }
 
         return services;
     }

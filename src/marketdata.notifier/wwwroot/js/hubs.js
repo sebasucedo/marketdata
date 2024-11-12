@@ -1,16 +1,34 @@
 "use strict";
 
-var connection = new signalR.HubConnectionBuilder()
-    .withUrl("/trade-hub", {
-        withCredentials: true
-    })
-    .build();
+async function getAccessToken() {
+    const response = await fetch('/api/account/token', {
+        method: 'GET',
+        credentials: 'include'
+    });
+    if (response.ok) {
+        const data = await response.json();
+        return data.AccessToken;
+    }
+    throw new Error("Failed to get access token");
+}
 
-connection.on("ReceiveMessage", function (message) {
-    var li = document.createElement("li");
-    document.getElementById("tradesList").appendChild(li);
+async function connectToHub() {
+    const token = await getAccessToken();
 
-    li.textContent = `${message}`;
-});
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl("/trade-hub", {
+            accessTokenFactory: () => token
+        })
+        .build();
 
-connection.start();
+    connection.on("ReceiveMessage", function (message) {
+        const li = document.createElement("li");
+        document.getElementById("tradesList").appendChild(li);
+        li.textContent = `${message}`;
+    });
+
+    await connection.start();
+    console.log("Conectado al SignalR Hub");
+}
+
+connectToHub().catch(err => console.error("Error al conectar al SignalR Hub:", err));

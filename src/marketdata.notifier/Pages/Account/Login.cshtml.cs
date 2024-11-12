@@ -52,7 +52,14 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(identity);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme, 
+                        principal,
+                        new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60)
+                        });
 
                 return RedirectToPage("/Index");
             }

@@ -1,6 +1,12 @@
-﻿using marketdata.domain;
+﻿using Amazon;
+using Amazon.CognitoIdentityProvider;
+using marketdata.domain;
 using marketdata.infrastructure;
 using marketdata.notifier.config;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 namespace marketdata.notifier;
 
@@ -16,6 +22,41 @@ internal static class Extensions
         services.AddMassTransitAmazonSqsConsumers(config.Aws);
 
         services.Configure<CognitoConfig>(configuration.GetSection("Aws:Cognito"));
+
+        return services;
+    }
+
+    public static IServiceCollection AddAuthentication(this IServiceCollection services, IConfigurationRoot configuration)
+    {
+        var config = configuration.Get();
+        if (config.Aws.Cognito is null)
+            throw new InvalidOperationException("AWS Cognito config missing");
+
+        services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+            .AddCookie(options =>
+            {
+                options.Cookie.HttpOnly = true;
+                options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+                options.LoginPath = "/Account/Login";
+                options.LogoutPath = "/Account/Logout";
+                options.AccessDeniedPath = "/Account/AccessDenied";
+                options.SlidingExpiration = true;
+                options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
+            })
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+            {
+                options.Authority = $"https://cognito-idp.us-east-1.amazonaws.com/{config.Aws.Cognito.UserPoolId}";
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = false,
+                    ValidateLifetime = true,
+                    ValidIssuer = $"https://cognito-idp.us-east-1.amazonaws.com/{config.Aws.Cognito.UserPoolId}"
+                };
+            });
+
+        services.AddSingleton(provider =>
+            new AmazonCognitoIdentityProviderClient(RegionEndpoint.GetBySystemName(config.Aws.Region)));
 
         return services;
     }
