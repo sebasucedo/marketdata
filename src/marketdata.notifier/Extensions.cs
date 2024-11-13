@@ -1,5 +1,6 @@
 ﻿using Amazon;
 using Amazon.CognitoIdentityProvider;
+using Amazon.Runtime;
 using marketdata.domain;
 using marketdata.infrastructure;
 using marketdata.notifier.config;
@@ -55,8 +56,12 @@ internal static class Extensions
                 };
             });
 
-        services.AddSingleton(provider =>
-            new AmazonCognitoIdentityProviderClient(RegionEndpoint.GetBySystemName(config.Aws.Region)));
+        services.AddSingleton(provider => 
+            {
+                var credentials = new BasicAWSCredentials(config.Aws.AccessKey, config.Aws.SecretKey);
+                var region = RegionEndpoint.GetBySystemName(config.Aws.Region);
+                return new AmazonCognitoIdentityProviderClient(credentials, region); 
+            });
 
         return services;
     }

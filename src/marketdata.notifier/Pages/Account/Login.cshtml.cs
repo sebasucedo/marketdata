@@ -93,7 +93,8 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
             }
         };
 
-        return await _cognitoClient.AdminInitiateAuthAsync(authRequest);
+        var response = await _cognitoClient.AdminInitiateAuthAsync(authRequest);
+        return response;
     }
 
     private static string CalculateSecretHash(string username, string clientId, string clientSecret)
