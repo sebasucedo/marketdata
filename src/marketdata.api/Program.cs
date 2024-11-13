@@ -6,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 IConfigurationRoot configuration = await GetConfiguration(builder);
 builder.Services.AddServices(configuration);
 builder.Services.AddOpenTelemetry(configuration);
+builder.Services.AddLogger(configuration);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
