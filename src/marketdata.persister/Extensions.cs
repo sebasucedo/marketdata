@@ -20,6 +20,7 @@ internal static class Extensions
 
         services.AddTransient<IDbConnection>(provider => new MySqlConnection(config.ConnectionStrings.DefaultConnection));
         services.AddTransient<ITradeGateway, TradeDAO>();
+        services.AddTransient<IQuoteGateway, QuoteDAO>();
 
         services.AddMassTransitAmazonSqsConsumers(config.Aws);
 

@@ -33,6 +33,8 @@ internal static class Extensions
         if (config.Aws.Cognito is null)
             throw new InvalidOperationException("AWS Cognito config missing");
 
+        string userPoolUrl = $"https://cognito-idp.us-east-1.amazonaws.com/{config.Aws.Cognito.UserPoolId}";
+
         services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
             .AddCookie(options =>
             {
@@ -46,13 +48,13 @@ internal static class Extensions
             })
             .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
-                options.Authority = $"https://cognito-idp.us-east-1.amazonaws.com/{config.Aws.Cognito.UserPoolId}";
+                options.Authority = userPoolUrl;
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = false,
                     ValidateLifetime = true,
-                    ValidIssuer = $"https://cognito-idp.us-east-1.amazonaws.com/{config.Aws.Cognito.UserPoolId}"
+                    ValidIssuer = userPoolUrl,
                 };
             });
 
