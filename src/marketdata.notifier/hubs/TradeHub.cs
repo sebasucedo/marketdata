@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace marketdata.notifier.hubs;
 
+//[Authorize(AuthenticationSchemes = "Bearer")] //TODO terminar de implementar autorización por token
 [Authorize]
 public class TradeHub : Hub
 {

@@ -52,7 +52,14 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(identity);
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+                await HttpContext.SignInAsync(
+                        CookieAuthenticationDefaults.AuthenticationScheme, 
+                        principal,
+                        new AuthenticationProperties
+                        {
+                            IsPersistent = true,
+                            ExpiresUtc = DateTimeOffset.UtcNow.AddMinutes(60)
+                        });
 
                 return RedirectToPage("/Index");
             }
@@ -86,7 +93,8 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
             }
         };
 
-        return await _cognitoClient.AdminInitiateAuthAsync(authRequest);
+        var response = await _cognitoClient.AdminInitiateAuthAsync(authRequest);
+        return response;
     }
 
     private static string CalculateSecretHash(string username, string clientId, string clientSecret)
