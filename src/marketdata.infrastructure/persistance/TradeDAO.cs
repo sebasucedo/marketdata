@@ -36,8 +36,10 @@ public class TradeDAO(IDbConnection connection) : ITradeGateway
         }
         catch (Exception ex)
         {
-            Serilog.Log.Error(ex, "");
-            throw;
+            Serilog.Log.Error(ex, "Failed to insert trade into the database. Symbol: {Symbol}, Timestamp: {Timestamp}, Price: {Price}, Quantity: {Quantity}, Tape: {Tape}, VWAP: {VWAP}",
+                              trade.Symbol, trade.Timestamp, trade.Price, trade.Quantity, trade.Tape, trade.VolumeWeightedAveragePrice);
+            throw new InvalidOperationException("An error occurred while inserting the trade into the database.", ex);
+
         }
     }
 }
