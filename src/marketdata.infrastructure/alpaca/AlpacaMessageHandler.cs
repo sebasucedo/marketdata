@@ -31,6 +31,7 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway,
             await ParseElement(doc.RootElement);
     }
 
+
     private async Task ParseElement(JsonElement element)
     {
         if (element.TryGetProperty("T", out JsonElement typeElement))
@@ -40,15 +41,11 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway,
             switch (type)
             {
                 case Constants.MessageTypes.SUCCESS:
-                    var message = element.GetProperty("msg").GetString();
+                    string message = element.GetProperty("msg").GetString() ?? Constants.MessageTypes.SUCCESS;
+                    Serilog.Log.Debug(message);
                     break;
                 case Constants.MessageTypes.ERROR:
-                    var options = new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    };
-                    var text = element.GetRawText();
-                    var error = JsonSerializer.Deserialize<ErrorDTO>(text, options);
+                    await NotifyError(element);
                     break;
                 case Constants.MessageTypes.TRADE:
                     await ExecuteTrade(element);
@@ -100,5 +97,18 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway,
         };
 
         await _quoteGateway.Process(quote);
+    }
+
+    readonly JsonSerializerOptions options = new()
+    {
+        PropertyNameCaseInsensitive = true
+    };
+
+    private async Task NotifyError(JsonElement element)
+    {
+        var text = element.GetRawText();
+        var error = JsonSerializer.Deserialize<ErrorDTO>(text, options);
+
+        Serilog.Log.Error(text);
     }
 }

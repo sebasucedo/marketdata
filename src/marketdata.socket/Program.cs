@@ -1,23 +1,20 @@
-using marketdata.api;
 using marketdata.infrastructure;
+using marketdata.socket;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(6000);
+    //options.ListenAnyIP(6001, listenOptions => listenOptions.UseHttps());
+}); 
+
 IConfigurationRoot configuration = await GetConfiguration(builder);
-
 builder.Services.AddServices(configuration);
-builder.Services.AddOpenTelemetry(configuration);
-builder.Services.AddLogger(configuration);
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI();
+app.UseWebSockets();
 app.AddEndpoints();
-app.MapHealthChecks("/healthcheck");
 
 app.Run();
 

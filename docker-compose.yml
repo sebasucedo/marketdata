@@ -8,8 +8,11 @@ services:
     ports:
       - "5000:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: "http://*:8080"
+      - ASPNETCORE_ENVIRONMENT=Development
+      - AWS_REGION
+      - AWS_ACCESS_KEY
+      - AWS_SECRET_KEY
+      - AWS_SECRET_NAME
     depends_on:
       - db
       - jaeger
@@ -20,7 +23,7 @@ services:
       dockerfile: Dockerfile.notifier
     ports:
       - "5001:8080"
-    environment:
+    environment: 
       - ASPNETCORE_ENVIRONMENT=Development
       - AWS_REGION
       - AWS_ACCESS_KEY
@@ -28,6 +31,15 @@ services:
       - AWS_SECRET_NAME
     depends_on:
       - jaeger
+
+  ecs:
+    build:
+      context: .
+      dockerfile: Dockerfile.ecs
+    ports:
+      - "5002:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
 
   persister:
     build:
@@ -41,6 +53,13 @@ services:
       - AWS_SECRET_NAME
     depends_on:
       - jaeger
+
+  socket:
+    build:
+      context: .
+      dockerfile: Dockerfile.socket
+    ports:
+      - "5003:6000"
 
   db:
     image: "mariadb:latest"
