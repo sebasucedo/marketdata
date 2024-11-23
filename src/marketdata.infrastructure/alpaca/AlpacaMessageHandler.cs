@@ -74,7 +74,7 @@ public class AlpacaMessageHandler(ITradeGateway tradeGateway,
             Quantity = t.Quantity,
             Timestamp = DateTime.Parse(t.Timestamp),
         };
-        await _tradeGateway.Save(trade);
+        await _tradeGateway.Process(trade);
     }
 
     private async Task ExecuteQuote(JsonElement element)

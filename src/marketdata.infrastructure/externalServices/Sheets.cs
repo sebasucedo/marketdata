@@ -15,7 +15,7 @@ public class Sheets : ITradeGateway
         throw new NotImplementedException();
     }
 
-    public Task<bool> Save(Trade trade)
+    public Task<bool> Process(Trade trade)
     {
         throw new NotImplementedException();
     }

@@ -28,7 +28,6 @@ public static class Extensions
 
         services.AddSingleton(sharedCts);
         services.AddSingleton<IMarketSocket>(provider => new AlpacaSocket(
-            provider.GetRequiredService<ILogger<AlpacaSocket>>(),
             config.Alpaca.Url,
             config.Alpaca.Key,
             config.Alpaca.Secret

@@ -1,5 +1,8 @@
 ﻿using marketdata.domain;
+using marketdata.domain.security;
 using marketdata.infrastructure;
+using marketdata.infrastructure.configs;
+using marketdata.infrastructure.security;
 using marketdata.infrastructure.websocket;
 
 namespace marketdata.socket;
@@ -9,7 +12,9 @@ public static class Extensions
     public static IServiceCollection AddServices(this IServiceCollection services, IConfigurationRoot configuration)
     {
         var config = configuration.Get();
+        services.Configure<AwsConfig>(configuration.GetSection("Aws"));
 
+        services.AddTransient<ITokenValidator, CognitoTokenValidator>();
         services.AddSingleton<WebSocketHandler>();
         services.AddTransient<ITradeGateway, TradeNotifier>();
         services.AddTransient<IQuoteGateway, QuoteNotifier>();

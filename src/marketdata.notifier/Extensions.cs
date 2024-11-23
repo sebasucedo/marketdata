@@ -6,7 +6,6 @@ using marketdata.infrastructure;
 using marketdata.notifier.config;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace marketdata.notifier;

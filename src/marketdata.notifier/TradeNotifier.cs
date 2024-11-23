@@ -15,7 +15,7 @@ public class TradeNotifier(IHubContext<TradeHub> hubContext) : ITradeGateway
         throw new NotImplementedException();
     }
 
-    public async Task<bool> Save(Trade trade)
+    public async Task<bool> Process(Trade trade)
     {
         var message = JsonSerializer.Serialize(trade);
 

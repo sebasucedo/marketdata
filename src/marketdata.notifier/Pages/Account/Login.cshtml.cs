@@ -103,11 +103,9 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
         var keyBytes = Encoding.UTF8.GetBytes(clientSecret);
         var messageBytes = Encoding.UTF8.GetBytes(message);
 
-        using (var hmac = new HMACSHA256(keyBytes))
-        {
-            var hashBytes = hmac.ComputeHash(messageBytes);
-            return Convert.ToBase64String(hashBytes);
-        }
+        using var hmac = new HMACSHA256(keyBytes);
+        var hashBytes = hmac.ComputeHash(messageBytes);
+        return Convert.ToBase64String(hashBytes);
     }
 
 }

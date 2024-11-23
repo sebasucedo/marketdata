@@ -1,6 +1,5 @@
 ﻿using marketdata.domain;
 using marketdata.infrastructure.externalServices;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,9 +10,8 @@ using System.Threading.Tasks;
 
 namespace marketdata.infrastructure.alpaca;
 
-public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, string secret) : IMarketSocket
+public class AlpacaSocket(string url, string key, string secret) : IMarketSocket
 {
-    private readonly ILogger<AlpacaSocket> _logger = logger;
     private readonly string _url = url;
     private readonly string _key = key;
     private readonly string _secret = secret;
@@ -67,18 +65,18 @@ public class AlpacaSocket(ILogger<AlpacaSocket> logger, string url, string key, 
             if (result.MessageType == WebSocketMessageType.Text)
             {
                 var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                _logger.LogInformation("Message received: {message}", message);
+                Serilog.Log.Information("Message received: {message}", message);
 
                 OnMessageReceived(message);
             }
             else if (result.MessageType == WebSocketMessageType.Close)
             {
-                _logger.LogInformation("WebSocket connection closed.");
+                Serilog.Log.Information("WebSocket connection closed.");
                 break;
             }
         }
 
-        _logger.LogInformation("Bye!");
+        Serilog.Log.Information("Bye!");
     }
 
     protected virtual void OnMessageReceived(string message)

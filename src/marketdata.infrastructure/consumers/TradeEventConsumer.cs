@@ -20,7 +20,7 @@ internal class TradeEventConsumer(ITradeGateway tradeGateway) : IConsumer<TradeE
 
         try
         {
-            await _tradeGateway.Save(trade);
+            await _tradeGateway.Process(trade);
         }
 		catch (Exception ex)
 		{
