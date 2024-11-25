@@ -20,5 +20,10 @@ public class Constants
     {
         public const string AWSCURRENT = "AWSCURRENT";
     }
-
+    public static class Keys
+    {
+        public const string USERNAME = "USERNAME";
+        public const string PASSWORD = "PASSWORD";
+        public const string SECRET_HASH = "SECRET_HASH";
+    }
 }

@@ -23,7 +23,7 @@ public class TradeDAO(IDbConnection connection) : ITradeGateway
         return q.ToList();
     }
 
-    public async Task<bool> Save(Trade trade)
+    public async Task<bool> Process(Trade trade)
     {
         var sql = @"INSERT INTO Trades (Symbol, Timestamp, Price, Quantity, Tape, VolumeWeightedAveragePrice)
                     VALUES (@Symbol, @Timestamp, @Price, @Quantity, @Tape, @VolumeWeightedAveragePrice)";

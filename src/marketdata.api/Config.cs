@@ -6,6 +6,7 @@ internal class Config(IConfiguration config) : infrastructure.configs.Config(con
     public Alpaca Alpaca { get; set; } = config.GetSection(nameof(Alpaca)).Get<Alpaca>()!;
     public Polygon Polygon { get; set; } = config.GetSection(nameof(Polygon)).Get<Polygon>()!;
     public Yahoo Yahoo { get; set; } = config.GetSection(nameof(Yahoo)).Get<Yahoo>()!;
+    public Finnhub Finnhub { get; set; } = config.GetSection(nameof(Finnhub)).Get<Finnhub>()!;
     public Jaeger Jaeger { get; set; } = config.GetSection(nameof(Jaeger)).Get<Jaeger>()!;
 }
 
@@ -25,7 +26,12 @@ internal class Polygon
 internal class Yahoo
 {
     public required string Url { get; set; }
+}
 
+internal class Finnhub
+{
+    public required string Url { get; set; }
+    public required string ApiKey { get; set; }
 }
 
 internal class Jaeger

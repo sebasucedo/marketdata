@@ -1,0 +1,24 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+COPY /src/marketdata.socket/marketdata.socket.csproj ./src/marketdata.socket/
+
+RUN dotnet restore ./src/marketdata.socket/marketdata.socket.csproj
+
+COPY /src/ ./src
+WORKDIR /app/src/marketdata.socket
+RUN dotnet build marketdata.socket.csproj -c Release -o /app/build
+
+RUN dotnet publish marketdata.socket.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+ENV TZ=America/Argentina/Buenos_Aires
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+COPY --from=build /app/publish .
+
+EXPOSE 6000
+
+ENTRYPOINT [ "dotnet", "marketdata.socket.dll" ]

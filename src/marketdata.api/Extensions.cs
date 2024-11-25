@@ -1,6 +1,5 @@
 ﻿using Amazon.CloudWatchLogs;
 using marketdata.domain;
-using marketdata.domain.entities;
 using marketdata.infrastructure;
 using marketdata.infrastructure.alpaca;
 using marketdata.infrastructure.configs;
@@ -13,6 +12,7 @@ using OpenTelemetry.Trace;
 using Serilog.Sinks.AwsCloudWatch;
 using Serilog;
 using Amazon;
+using marketdata.infrastructure.finnhub;
 
 namespace marketdata.api;
 
@@ -25,17 +25,22 @@ public static class Extensions
         var config = configuration.Get();
 
         var sharedCts = new CancellationTokenSource();
+
         services.AddSingleton(sharedCts);
         services.AddSingleton<IMarketSocket>(provider => new AlpacaSocket(
-            provider.GetRequiredService<ILogger<AlpacaSocket>>(),
             config.Alpaca.Url,
             config.Alpaca.Key,
             config.Alpaca.Secret
             ));
+        services.AddTransient<IMessageHandler, AlpacaMessageHandler>();
+        //services.AddSingleton<IMarketSocket>(provider => new FinnhubSocket(
+        //    config.Finnhub.Url,
+        //    config.Finnhub.ApiKey
+        //    ));
+        //services.AddTransient<IMessageHandler, FinnhubMessageHandler>();
 
         services.AddTransient<ITradeGateway, TradeGateway>();
         services.AddTransient<IQuoteGateway, QuoteGateway>();
-        services.AddTransient<IMessageHandler, AlpacaMessageHandler>();
 
         services.AddHostedService<listener.Worker>();
 
@@ -100,7 +105,7 @@ public static class Extensions
         return services;
     }
 
-    public static void ConfigureRoutes(this WebApplication app)
+    public static void AddEndpoints(this WebApplication app)
     {
         app.MapGet("/", () => "Marketdata API!");
 
@@ -113,25 +118,6 @@ public static class Extensions
         app.MapPost("/subscribe", async ([FromServices] IMarketSocket socket, [FromBody] SubscrtiptionRequest request) =>
         {
             await socket.Subscribe(request.Symbols);
-            return Results.Ok();
-        });
-
-        app.MapPost("/test", async (ITradeGateway gateway, IClockWrapper clockWrapper) =>
-        {
-            Random rnd = new();
-            decimal max = 100000m;
-            Trade trade = new()
-            {
-                Symbol = "AAPL",
-                Timestamp = clockWrapper.UtcNow,
-                TradeId = rnd.Next(),
-                Price = Math.Round((decimal)(rnd.NextDouble() * (double)max), 2),
-                Quantity = Math.Round((decimal)(rnd.NextDouble() * (double)max), 2),
-                Tape = "A",
-                VolumeWeightedAveragePrice = rnd.Next(),
-            };
-            await gateway.Save(trade);
-
             return Results.Ok();
         });
     }

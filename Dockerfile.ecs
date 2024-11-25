@@ -1,0 +1,25 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /app
+
+COPY /src/marketdata.ecs/marketdata.ecs.csproj ./src/marketdata.ecs/
+
+RUN dotnet restore ./src/marketdata.ecs/marketdata.ecs.csproj
+
+COPY /src/ ./src
+WORKDIR /app/src/marketdata.ecs
+RUN dotnet build marketdata.ecs.csproj -c Release -o /app/build
+
+RUN dotnet publish marketdata.ecs.csproj -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+
+ENV TZ=America/Argentina/Buenos_Aires
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+ENV ASPNETCORE_URLS=http://+:80
+COPY --from=build /app/publish .
+
+EXPOSE 80
+
+ENTRYPOINT [ "dotnet", "marketdata.ecs.dll" ]

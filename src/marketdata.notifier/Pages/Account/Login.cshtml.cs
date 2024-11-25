@@ -1,26 +1,18 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Amazon.CognitoIdentityProvider;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using System.Security.Cryptography;
-using System.Text;
-using Amazon.CognitoIdentityProvider.Model;
 using Microsoft.AspNetCore.Authorization;
 using marketdata.domain;
-using Microsoft.Extensions.Options;
-using marketdata.notifier.config;
+using marketdata.domain.security;
 
 namespace marketdata.notifier.Pages.Account;
 
 [AllowAnonymous]
-public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOptions<CognitoConfig> cognitoConfig) : PageModel
+public class LoginModel(IIdentityService identityService) : PageModel
 {
-    private readonly AmazonCognitoIdentityProviderClient _cognitoClient = cognitoClient;
-    private readonly string _userPoolId = cognitoConfig.Value.UserPoolId;
-    private readonly string _clientId = cognitoConfig.Value.ClientId;
-    private readonly string _clientSecret = cognitoConfig.Value.ClientSecret;
+    private readonly IIdentityService _identityService = identityService;
 
     [BindProperty]
     public required string Username { get; set; }
@@ -38,16 +30,19 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
 
         try
         {
-            var authResponse = await AuthenticateUserAsync(Username, Password);
+            var authResponse = await _identityService.AuthenticateUser(Username, Password);
 
-            if (authResponse.AuthenticationResult != null)
+            if (authResponse is not null &&
+                authResponse.AccessToken is not null &&
+                authResponse.IdToken is not null &&
+                authResponse.RefreshToken is not null)
             {
                 var claims = new List<Claim>
                 {
                     new(ClaimTypes.Name, Username),
-                    new(Constants.ClaimTypes.ACCESS_TOKEN, authResponse.AuthenticationResult.AccessToken),
-                    new(Constants.ClaimTypes.ID_TOKEN, authResponse.AuthenticationResult.IdToken),
-                    new(Constants.ClaimTypes.REFRESH_TOKEN, authResponse.AuthenticationResult.RefreshToken)
+                    new(Constants.ClaimTypes.ACCESS_TOKEN, authResponse.AccessToken),
+                    new(Constants.ClaimTypes.ID_TOKEN, authResponse.IdToken),
+                    new(Constants.ClaimTypes.REFRESH_TOKEN, authResponse.RefreshToken)
                 };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -73,40 +68,6 @@ public class LoginModel(AmazonCognitoIdentityProviderClient cognitoClient, IOpti
         {
             ModelState.AddModelError(string.Empty, $"Login failed: {ex.Message}");
             return Page();
-        }
-    }
-
-    private async Task<AdminInitiateAuthResponse> AuthenticateUserAsync(string username, string password)
-    {
-        var secretHash = CalculateSecretHash(username, _clientId, _clientSecret);
-
-        var authRequest = new AdminInitiateAuthRequest
-        {
-            UserPoolId = _userPoolId,
-            ClientId = _clientId,
-            AuthFlow = AuthFlowType.ADMIN_USER_PASSWORD_AUTH,
-            AuthParameters = new Dictionary<string, string>
-            {
-                { Constants.Keys.USERNAME, username },
-                { Constants.Keys.PASSWORD, password },
-                { Constants.Keys.SECRET_HASH, secretHash }
-            }
-        };
-
-        var response = await _cognitoClient.AdminInitiateAuthAsync(authRequest);
-        return response;
-    }
-
-    private static string CalculateSecretHash(string username, string clientId, string clientSecret)
-    {
-        var message = $"{username}{clientId}";
-        var keyBytes = Encoding.UTF8.GetBytes(clientSecret);
-        var messageBytes = Encoding.UTF8.GetBytes(message);
-
-        using (var hmac = new HMACSHA256(keyBytes))
-        {
-            var hashBytes = hmac.ComputeHash(messageBytes);
-            return Convert.ToBase64String(hashBytes);
         }
     }
 

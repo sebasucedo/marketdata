@@ -22,11 +22,4 @@ public static class Constants
         public const string ID_TOKEN = "IdToken";
         public const string REFRESH_TOKEN = "RefreshToken";
     }
-
-    public static class Keys
-    {
-        public const string USERNAME = "USERNAME";
-        public const string PASSWORD = "PASSWORD";
-        public const string SECRET_HASH = "SECRET_HASH";
-    }
 }

@@ -20,7 +20,7 @@ public class TradeGateway(IBus bus, IClockWrapper clockWrapper) : ITradeGateway
         throw new NotImplementedException();
     }
 
-    public async Task<bool> Save(Trade trade)
+    public async Task<bool> Process(Trade trade)
     {
         TradeEvent tradeEvent = new()
         {

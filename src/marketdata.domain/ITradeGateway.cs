@@ -10,5 +10,5 @@ namespace marketdata.domain;
 public interface ITradeGateway
 {
     Task<IEnumerable<Trade>> GetAll();
-    Task<bool> Save(Trade trade);
+    Task<bool> Process(Trade trade);
 }
