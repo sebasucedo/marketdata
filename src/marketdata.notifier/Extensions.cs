@@ -2,8 +2,10 @@
 using Amazon.CognitoIdentityProvider;
 using Amazon.Runtime;
 using marketdata.domain;
+using marketdata.domain.security;
 using marketdata.infrastructure;
-using marketdata.notifier.config;
+using marketdata.infrastructure.configs;
+using marketdata.infrastructure.security;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -20,8 +22,6 @@ internal static class Extensions
         services.AddTransient<IQuoteGateway, QuoteNotifier>();
 
         services.AddMassTransitAmazonSqsConsumers(config.Aws);
-
-        services.Configure<CognitoConfig>(configuration.GetSection("Aws:Cognito"));
 
         return services;
     }
@@ -63,6 +63,9 @@ internal static class Extensions
                 var region = RegionEndpoint.GetBySystemName(config.Aws.Region);
                 return new AmazonCognitoIdentityProviderClient(credentials, region); 
             });
+
+        services.Configure<AwsConfig>(configuration.GetSection("Aws"));
+        services.AddTransient<IIdentityService, CognitoIdentityService>();
 
         return services;
     }

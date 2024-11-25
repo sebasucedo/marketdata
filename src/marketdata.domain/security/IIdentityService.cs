@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace marketdata.domain.security;
 
-public interface ITokenValidator
+public interface IIdentityService
 {
+    Task<AuthenticationResponse?> AuthenticateUser(string username, string password);
     Task<bool> Validate(string token);
 }

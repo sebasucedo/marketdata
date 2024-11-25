@@ -1,4 +1,7 @@
-﻿using marketdata.domain;
+﻿using Amazon;
+using Amazon.CognitoIdentityProvider;
+using Amazon.Runtime;
+using marketdata.domain;
 using marketdata.domain.security;
 using marketdata.infrastructure;
 using marketdata.infrastructure.configs;
@@ -14,8 +17,18 @@ public static class Extensions
         var config = configuration.Get();
         services.Configure<AwsConfig>(configuration.GetSection("Aws"));
 
-        services.AddTransient<ITokenValidator, CognitoTokenValidator>();
-        services.AddSingleton<WebSocketHandler>();
+        services.AddSingleton(provider =>
+        {
+            var credentials = new BasicAWSCredentials(config.Aws.AccessKey, config.Aws.SecretKey);
+            var region = RegionEndpoint.GetBySystemName(config.Aws.Region);
+            return new AmazonCognitoIdentityProviderClient(credentials, region);
+        });
+
+        services.AddTransient<IIdentityService, CognitoIdentityService>();
+
+        services.AddTransient<WebSocketHandler>();
+        services.AddSingleton<WebSocketConnectionManager>();
+
         services.AddTransient<ITradeGateway, TradeNotifier>();
         services.AddTransient<IQuoteGateway, QuoteNotifier>();
 

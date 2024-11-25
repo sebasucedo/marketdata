@@ -1,17 +1,18 @@
 ﻿using marketdata.domain;
 using marketdata.domain.entities;
+using marketdata.infrastructure.websocket;
 using System.Text.Json;
 
 namespace marketdata.socket;
 
-public class QuoteNotifier(infrastructure.websocket.WebSocketHandler webSocketManager) : IQuoteGateway
+public class QuoteNotifier(WebSocketConnectionManager connectionManager) : IQuoteGateway
 {
-    private readonly infrastructure.websocket.WebSocketHandler _webSocketManager = webSocketManager;
+    private readonly WebSocketConnectionManager _connectionManager = connectionManager;
 
     public async Task<bool> Process(Quote quote)
     {
         var message = JsonSerializer.Serialize(quote);
-        await _webSocketManager.SendMessage(message);
+        await _connectionManager.BroadcastMessage(message);
         return true;
     }
 }

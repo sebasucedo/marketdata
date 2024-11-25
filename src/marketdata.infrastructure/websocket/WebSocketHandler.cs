@@ -1,5 +1,4 @@
 ﻿using marketdata.domain.security;
-using marketdata.infrastructure.security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,16 +9,20 @@ using System.Threading.Tasks;
 
 namespace marketdata.infrastructure.websocket;
 
-public class WebSocketHandler(ITokenValidator tokenValidator)
+public class WebSocketHandler(WebSocketConnectionManager connectionManager, IIdentityService tokenValidator)
 {
     private WebSocket? _webSocket;
-    private readonly ITokenValidator _tokenValidator = tokenValidator;
+    private readonly WebSocketConnectionManager _connectionManager = connectionManager;
+    private readonly IIdentityService _tokenValidator = tokenValidator;
 
+    public Guid ConnectionId { get; set; } = Guid.NewGuid();
     public bool IsConnected => _webSocket != null && _webSocket.State == WebSocketState.Open;
+    public bool IsAuthenticated { get; private set; }
 
     public void SetWebSocket(WebSocket webSocket)
     {
         _webSocket = webSocket;
+        _connectionManager.AddConnection(ConnectionId, this);
     }
 
     public async Task SendMessage(string message)
@@ -56,6 +59,8 @@ public class WebSocketHandler(ITokenValidator tokenValidator)
             }
         }
 
+        _connectionManager.RemoveConnection(ConnectionId);
+
         await _webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", cancellationToken);
     }
 
@@ -81,18 +86,25 @@ public class WebSocketHandler(ITokenValidator tokenValidator)
         catch (Exception ex)
         {
             Serilog.Log.Error(ex, "Error processing websocket incoming message");
+
+            await SendMessage($"Echo {message}");
         }
     }
 
     private async Task Authenticate(JsonElement element)
     {
+        if (IsAuthenticated)
+        {
+            await SendMessage("Already authenticated");
+            return;
+        }
         if (element.TryGetProperty("token", out JsonElement tokenElement))
         {
             string? token = tokenElement.GetString();
             if (token is not null)
             {
-                var ok = await _tokenValidator.Validate(token);
-                await SendMessage(ok ? "Authentication successful." : "Authentication failed.");
+                IsAuthenticated = await _tokenValidator.Validate(token);
+                await SendMessage(IsAuthenticated ? "Authentication successful." : "Authentication failed.");
             }
         }
     }
