@@ -18,6 +18,7 @@ public class WebSocketHandler(WebSocketConnectionManager connectionManager, IIde
     public Guid ConnectionId { get; set; } = Guid.NewGuid();
     public bool IsConnected => _webSocket != null && _webSocket.State == WebSocketState.Open;
     public bool IsAuthenticated { get; private set; }
+    public string[] Symbols { get; private set; } = [];
 
     public void SetWebSocket(WebSocket webSocket)
     {
@@ -77,8 +78,14 @@ public class WebSocketHandler(WebSocketConnectionManager connectionManager, IIde
                 string? type = typeElement.GetString();
                 switch (type)
                 {
-                    case "auth":
+                    case domain.Constants.Actions.AUTHORIZE:
                         await Authenticate(element);
+                        break;
+                    case domain.Constants.Actions.SUBSCRIBE:
+                        Subscribe(element);
+                        break;
+                    case domain.Constants.Actions.UNSUBSCRIBE:
+                        Unsubscribe(element);
                         break;
                 }
             }
@@ -98,7 +105,7 @@ public class WebSocketHandler(WebSocketConnectionManager connectionManager, IIde
             await SendMessage("Already authenticated");
             return;
         }
-        if (element.TryGetProperty("token", out JsonElement tokenElement))
+        if (element.TryGetProperty(domain.Constants.Properties.TOKEN, out JsonElement tokenElement))
         {
             string? token = tokenElement.GetString();
             if (token is not null)
@@ -108,5 +115,36 @@ public class WebSocketHandler(WebSocketConnectionManager connectionManager, IIde
             }
         }
     }
-}
 
+    private async void Subscribe(JsonElement element)
+    {
+        if (!IsAuthenticated)
+            return;
+
+        if (element.TryGetProperty(domain.Constants.Properties.SYMBOLS, out JsonElement symbolsElement))
+        {
+            string[] symbols = symbolsElement.GetString()?.Split(',').Select(val => val.Trim().ToLower()).ToArray() ?? [];
+            Symbols = Symbols.Concat(symbols)
+                             .Distinct(StringComparer.OrdinalIgnoreCase)
+                             .ToArray();
+            await SendMessage($"Subscribed to {string.Join(", ", Symbols)}");
+        }
+    }
+
+    private async void Unsubscribe(JsonElement element)
+    {
+        if (!IsAuthenticated)
+            return;
+
+        if (element.TryGetProperty(domain.Constants.Properties.SYMBOLS, out JsonElement symbolsElement))
+        {
+            string[] symbols = symbolsElement.GetString()?.Split(',').Select(val => val.Trim().ToLower()).ToArray() ?? [];
+            string[] symbolsToRemove = Symbols.Intersect(symbols).ToArray();
+            Symbols = Symbols.Except(symbols).ToArray();
+            await SendMessage(symbolsToRemove.Length > 0
+                              ? $"Unsubscribed from {string.Join(", ", symbolsToRemove)}"
+                              : "No symbols to unsubscribe.");
+        }
+    }
+
+}

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,63 +9,56 @@ namespace marketdata.infrastructure.websocket;
 
 public class WebSocketConnectionManager
 {
-    private readonly Dictionary<Guid, WebSocketHandler> _connections = [];
-
-    private readonly object _lock = new();
+    private readonly ConcurrentDictionary<Guid, WebSocketHandler> _connections = [];
 
     public void AddConnection(Guid connectionId, WebSocketHandler handler)
     {
-        lock (_lock)
-        {
-            if (!_connections.ContainsKey(connectionId))
-            {
-                _connections[connectionId] = handler;
-            }
-        }
+        _connections.TryAdd(connectionId, handler);
     }
 
     public void RemoveConnection(Guid connectionId)
     {
-        lock (_lock)
-        {
-            _connections.Remove(connectionId);
-        }
+        _connections.TryRemove(connectionId, out _);
     }
 
     public WebSocketHandler? GetConnection(Guid connectionId)
     {
-        lock (_lock)
-        {
-            return _connections.TryGetValue(connectionId, out var handler) ? handler : null;
-        }
+        return _connections.TryGetValue(connectionId, out var handler) ? handler : null;
     }
 
     public IEnumerable<WebSocketHandler> GetAllConnections()
     {
-        lock (_lock)
-        {
-            return [.. _connections.Values];
-        }
+        return [.. _connections.Values];
     }
 
-    public async Task BroadcastMessage(string message)
+    public async Task BroadcastMessage(string message) => await BroadcastMessage(_ => true, message);
+
+    public async Task BroadcastMessage(Func<WebSocketHandler, bool> predicate, string message)
     {
-        var tasks = new List<Task>();
-        lock (_lock)
-        {
-            tasks = _connections.Values
-                    .Where(handler => handler.IsConnected)
-                    .Select(handler => handler.SendMessage(message))
-                    .ToList();
-        }
+        var connections = _connections.Values
+                                      .Where(predicate)
+                                      .ToList();
+        if (connections.Count == 0)
+            return;
+
+        List<Task> tasks = connections
+                           .Select(async handler =>
+                           {
+                               try
+                               {
+                                   await handler.SendMessage(message);
+                               }
+                               catch (Exception ex)
+                               {
+                                   Serilog.Log.Error(ex, "An error occurred while sending a message. Exception details: {message}", ex.Message);
+                               }
+                           })
+                           .ToList();
         await Task.WhenAll(tasks);
     }
 
     public int GetActiveConnectionsCount()
     {
-        lock (_lock)
-        {
-            return _connections.Count;
-        }
+        return _connections.Count;
     }
 }
