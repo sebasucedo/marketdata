@@ -22,4 +22,17 @@ public static class Constants
         public const string ID_TOKEN = "IdToken";
         public const string REFRESH_TOKEN = "RefreshToken";
     }
+
+    public static class Actions
+    {
+        public const string AUTHORIZE = "auth";
+        public const string SUBSCRIBE = "subscribe";
+        public const string UNSUBSCRIBE = "unsubscribe";
+    }
+
+    public static class Properties
+    {
+        public const string TOKEN = "token";
+        public const string SYMBOLS = "symbols";
+    }
 }
